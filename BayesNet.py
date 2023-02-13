@@ -2,7 +2,6 @@ class BYNetwork:
     def __init__(self):
         self.events = {}
         self.probs = {}
-        pass
 
     def add_event(self, event: str, prob: float, parents: list):
         # Checks if  the event name is non-empty
@@ -30,9 +29,17 @@ class BYNetwork:
                       i + '" '+'is not in events.\n')
 
 
+class Node:
+    def __init__(self, name, prob, parents):
+        self.name = name
+        self.probability = prob
+        self.parents = parents
+        self.parent_n_node_events = {}
+
+
 # TODO:  This will be the main.py
 inf = BYNetwork()
-inf.add_event('A', 0.4, [])
-inf.add_event('B', 0.1, ['A'])
-inf.add_event('C', 0.7, ['B'])
+inf.add_event('homicida', 0.01, [])
+inf.add_event('sangre', 0.8, ['homicida'])
+
 print(inf.events)
