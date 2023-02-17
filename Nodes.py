@@ -5,7 +5,7 @@ class Node:
         self.cpt = cpt
 
     def watch_node_info(self):
-        print(f'Name: {self.name}\nParents: {self.parents}\nCpt: {self.cpt}')
+        print(f'Name: {self.name}\nParents: {self.parents}\nCpt: {self.cpt}\n')
 
     def set_node(self, name, parents, cpt):
         self.name = name

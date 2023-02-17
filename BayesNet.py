@@ -28,6 +28,7 @@ class BayesianNetwork:
         single_parent = Node('', [], ())
         oneParent = False
         parents = []
+        node_parents = []
         for i in self.nodes:
             if i.name == node_name:
                 node = i
@@ -38,62 +39,115 @@ class BayesianNetwork:
             for i in self.nodes:
                 if i.name == node.parents[0]:
                     single_parent.set_node(i.name, i.parents, i.cpt)
-        elif len(node.parents) < 1:
-            parents.append(node.parents)
+        elif len(node.parents) > 1:
+            parents = node.parents.copy()
+            for nodi in self.nodes:
+                if nodi.name in parents:
+                    parents.remove(nodi.name)
+                    parents.append(nodi)
 
         # Infer with one parent
-        # P(A|B) = P(B|A)P(A) / P(B)
-        # P(B) = P(B|A)P(A) + P(B|-A)P(-A)
-        prob_child = (node.cpt[0][0]*single_parent.cpt[0]) + \
-            (node.cpt[1][0]*single_parent.cpt[1])
-        notprob_child = 1-prob_child
+        if oneParent:
+            # P(A|B) = P(B|A)P(A) / P(B)
+            # P(B) = P(B|A)P(A) + P(B|-A)P(-A)
+            prob_child = (node.cpt[0][0]*single_parent.cpt[0]) + \
+                (node.cpt[1][0]*single_parent.cpt[1])
+            # P(-B)
+            notprob_child = 1-prob_child
 
-        # P(A|B) = P(B|A)P(A) / P(B)
-        parent_given_child = (
-            node.cpt[0][0]*single_parent.cpt[0])/prob_child
-        # P(-A|B) = P(B|-A)P(-A) / P(B)
-        not_parent_given_child = 1-notprob_child
+            # P(A|B) = P(B|A)P(A) / P(B)
+            parent_given_child = (
+                node.cpt[0][0]*single_parent.cpt[0])/prob_child
+            # P(-A|B) = P(B|-A)P(-A) / P(B)
+            not_parent_given_child = 1-notprob_child
 
-        # P(A|-B) = P(-B|A)P(A) / P(-B) = (0.01)(0.01) / 0.892 = 0.000112
+            # P(A|-B) = P(-B|A)P(A) / P(-B)
+            parent_given_not_child = (
+                node.cpt[0][1] * single_parent.cpt[0]) / notprob_child
 
-        parent_given_not_child = (
-            node.cpt[0][1] * single_parent.cpt[0]) / notprob_child
+            # P(-A|-B) = P(-B|-A)P(-A) / P(-B)
+            not_parent_given_not_child = 1 - parent_given_not_child
 
-        # P(-A|-B) = P(-B|-A)P(-A) / P(-B)
+            # Appending all results into the result list
+            # P(B)
+            results.append(Node(f'P({node.name})', [], round(prob_child, 5)))
+            # P(-B)
+            results.append(
+                Node(f'P(-{node.name})', [], round(notprob_child, 5)))
+            # P(A|B)
+            results.append(
+                Node(f'P({single_parent.name}|{node.name})', [], round(parent_given_child, 5)))
+            # P(-A|B)
+            results.append(
+                Node(f'P(-{single_parent.name}|{node.name})', [], round(not_parent_given_child, 5)))
+            # P(A|-B)
+            results.append(
+                Node(f'P({single_parent.name}|-{node.name})', [], round(parent_given_not_child, 5)))
+            # P(-A|-B)
+            results.append(Node(
+                f'P(-{single_parent.name}|-{node.name})', [], round(not_parent_given_not_child, 5)))
 
-        not_parent_given_not_child = 1 - parent_given_not_child
+        elif not oneParent:
+            while parents != []:
+                print('This is a parent: ', parents[0])
+                # P(A|B) = P(B|A)P(A) / P(B)
+                # P(B) = P(B|A)P(A) + P(B|-A)P(-A)
+                prob_child = (node.cpt[0][0]*parents[0].cpt[0]) + \
+                    (node.cpt[1][0]*parents[0].cpt[1])
+                # P(-B)
+                notprob_child = 1-prob_child
 
-        # Appending all results into the result list
-        # P(B)
-        results.append(Node(f'P({node.name})', [], round(prob_child, 5)))
-        #
-        results.append(Node(f'P(-{node.name})', [], round(notprob_child, 5)))
-        # P(-B)
-        results.append(
-            Node(f'P({single_parent.name}|{node.name})', [], round(parent_given_child, 5)))
-        # P(A|B)
-        results.append(
-            Node(f'P(-{single_parent.name}|{node.name})', [], round(not_parent_given_child, 5)))
-        # P(-A|B)
-        results.append(
-            Node(f'P({single_parent.name}|-{node.name})', [], round(parent_given_not_child, 5)))
-        # P(-A|-B)
-        results.append(Node(
-            f'P(-{single_parent.name}|-{node.name})', [], round(not_parent_given_not_child, 5)))
+                # P(A|B) = P(B|A)P(A) / P(B)
+                parent_given_child = (
+                    node.cpt[0][0]*parents[0].cpt[0])/prob_child
+                # P(-A|B) = P(B|-A)P(-A) / P(B)
+                not_parent_given_child = 1-notprob_child
 
-        for node in results:
-            print(f'Name:{node.name}\nProbability:{node.cpt}\n')
+                # P(A|-B) = P(-B|A)P(A) / P(-B)
+                parent_given_not_child = (
+                    node.cpt[0][1] * parents[0].cpt[0]) / notprob_child
+
+                # P(-A|-B) = P(-B|-A)P(-A) / P(-B)
+                not_parent_given_not_child = 1 - parent_given_not_child
+
+                # Appending all results into the result list
+                # P(B)
+                results.append(
+                    Node(f'P({node.name})', [], round(prob_child, 5)))
+                # P(-B)
+                results.append(
+                    Node(f'P(-{node.name})', [], round(notprob_child, 5)))
+                # P(A|B)
+                results.append(
+                    Node(f'P({parents[0].name}|{node.name})', [], round(parent_given_child, 5)))
+                # P(-A|B)
+                results.append(
+                    Node(f'P(-{parents[0].name}|{node.name})', [], round(not_parent_given_child, 5)))
+                # P(A|-B)
+                results.append(
+                    Node(f'P({parents[0].name}|-{node.name})', [], round(parent_given_not_child, 5)))
+                # P(-A|-B)
+                results.append(Node(
+                    f'P(-{parents[0].name}|-{node.name})', [], round(not_parent_given_not_child, 5)))
+
+                parents.remove(parents[0])
+
+        return results
 
 
 # B = Name , parents , B given A is true, B given A is false
 nodes = [
     Node('A', [], ((0.01, 0.99))),
+    Node('C', [], ((0.01, 0.99))),
     #       (( P(B|A) , P(-B|A) )  , ( P(B|-A) , P(-B|-A) ))
-    Node('B', ['A'], ((0.8, 0.2), (0.1, 0.9)))
+    Node('B', ['A', 'C'], ((0.8, 0.2), (0.1, 0.9)))
 ]
 
 bayes = BayesianNetwork()
 
 bayes.add_nodes(nodes)
 
-bayes.get_parents_results('B')
+result = bayes.get_parents_results('B')
+
+for node in result:
+    node.watch_node_info()
