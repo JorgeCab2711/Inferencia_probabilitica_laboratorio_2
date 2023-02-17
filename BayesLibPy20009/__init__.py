@@ -1,0 +1,3 @@
+from BayesNet import BayesianNetwork
+
+

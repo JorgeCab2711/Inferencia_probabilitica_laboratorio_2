@@ -1,0 +1,8 @@
+setup.py
+BayesLibPy20009/BayesNet.py
+BayesLibPy20009/Nodes.py
+BayesLibPy20009/__init__.py
+BayesLibPy20009.egg-info/PKG-INFO
+BayesLibPy20009.egg-info/SOURCES.txt
+BayesLibPy20009.egg-info/dependency_links.txt
+BayesLibPy20009.egg-info/top_level.txt
