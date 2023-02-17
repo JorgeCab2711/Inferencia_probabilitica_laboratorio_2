@@ -1,45 +1,99 @@
-class BYNetwork:
+from Nodes import Node
+
+
+class BayesianNetwork:
     def __init__(self):
-        self.events = {}
-        self.probs = {}
+        self.nodes = []
 
-    def add_event(self, event: str, prob: float, parents: list):
-        # Checks if  the event name is non-empty
-        if len(event) <= 0:
-            raise Exception('Event name must be a non-empty string.')
-        # If probability is greater than one or less than zero it will raise an exception.
-        if prob < 0 or prob > 1:
-            raise Exception('Probability must be between 0 and 1.')
-        # Handles the probability
-        if event[0] != '-':
-            # adds the negated event
-            Nprob = 1 - prob
-            self.events[event] = [prob, Nprob, parents]
-        # handle negation of probability
-        elif event[0] == '-':
-            # adds the non negated event
-            not_negation = event.replace('-', '')
-            # adds the negated event
-            Nprob = 1 - prob
-            self.events[not_negation] = [prob, Nprob, parents]
+    def add_nodes(self, nodes):
+        for i in nodes:
+            self.nodes.append(i)
 
-        for i in parents:
-            if i not in self.events.keys():
-                print('\nWarning: Parent'+' "' +
-                      i + '" '+'is not in events.\n')
+    def infer(self, query_node, observed):
+        # TODO: implement inference algorithm
+        pass
+
+    # Checks if the first node is dependent of the second node
+    def isDependent(self, node: Node, node2: Node):
+        if node.cpt[0] == node2.cpt[0] or len(node2.cpt) == 1:
+            return False
+        else:
+            return True
+
+    # Returns a list of the results of inference given a node from its parents
+
+    def get_parents_results(self, node_name):
+        results = []
+        node = Node('', [], ())
+        single_parent = Node('', [], ())
+        oneParent = False
+        parents = []
+        for i in self.nodes:
+            if i.name == node_name:
+                node = i
+        if len(node.parents) == 0:
+            raise ValueError('Node has no parents.')
+        elif len(node.parents) == 1:
+            oneParent = True
+            for i in self.nodes:
+                if i.name == node.parents[0]:
+                    single_parent.set_node(i.name, i.parents, i.cpt)
+        elif len(node.parents) < 1:
+            parents.append(node.parents)
+
+        # Infer with one parent
+        # P(A|B) = P(B|A)P(A) / P(B)
+        # P(B) = P(B|A)P(A) + P(B|-A)P(-A)
+        prob_child = (node.cpt[0][0]*single_parent.cpt[0]) + \
+            (node.cpt[1][0]*single_parent.cpt[1])
+        notprob_child = 1-prob_child
+
+        # P(A|B) = P(B|A)P(A) / P(B)
+        parent_given_child = (
+            node.cpt[0][0]*single_parent.cpt[0])/prob_child
+        # P(-A|B) = P(B|-A)P(-A) / P(B)
+        not_parent_given_child = 1-notprob_child
+
+        # P(A|-B) = P(-B|A)P(A) / P(-B) = (0.01)(0.01) / 0.892 = 0.000112
+
+        parent_given_not_child = (
+            node.cpt[0][1] * single_parent.cpt[0]) / notprob_child
+
+        # P(-A|-B) = P(-B|-A)P(-A) / P(-B)
+
+        not_parent_given_not_child = 1 - parent_given_not_child
+
+        # Appending all results into the result list
+        # P(B)
+        results.append(Node(f'P({node.name})', [], round(prob_child, 5)))
+        #
+        results.append(Node(f'P(-{node.name})', [], round(notprob_child, 5)))
+        # P(-B)
+        results.append(
+            Node(f'P({single_parent.name}|{node.name})', [], round(parent_given_child, 5)))
+        # P(A|B)
+        results.append(
+            Node(f'P(-{single_parent.name}|{node.name})', [], round(not_parent_given_child, 5)))
+        # P(-A|B)
+        results.append(
+            Node(f'P({single_parent.name}|-{node.name})', [], round(parent_given_not_child, 5)))
+        # P(-A|-B)
+        results.append(Node(
+            f'P(-{single_parent.name}|-{node.name})', [], round(not_parent_given_not_child, 5)))
+
+        for node in results:
+            print(f'Name:{node.name}\nProbability:{node.cpt}\n')
 
 
-class Node:
-    def __init__(self, name, prob, parents):
-        self.name = name
-        self.probability = prob
-        self.parents = parents
-        self.parent_n_node_events = {}
+# B = Name , parents , B given A is true, B given A is false
+nodes = [
+    Node('A', [], ((0.01, 0.99))),
+    #       (( P(B|A) , P(-B|A) )  , ( P(B|-A) , P(-B|-A) ))
+    Node('B', ['A'], ((0.8, 0.2), (0.1, 0.9)))
+]
 
+bayes = BayesianNetwork()
 
-# TODO:  This will be the main.py
-inf = BYNetwork()
-inf.add_event('homicida', 0.01, [])
-inf.add_event('sangre', 0.8, ['homicida'])
+bayes.add_nodes(nodes)
 
-print(inf.events)
+bayes.get_parents_results('B')
