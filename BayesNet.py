@@ -135,19 +135,21 @@ class BayesianNetwork:
         return results
 
 
-# B = Name , parents , B given A is true, B given A is false
-nodes = [
-    Node('A', [], ((0.01, 0.99))),
-    Node('C', [], ((0.01, 0.99))),
-    #       (( P(B|A) , P(-B|A) )  , ( P(B|-A) , P(-B|-A) ))
-    Node('B', ['A', 'C'], ((0.8, 0.2), (0.1, 0.9)))
-]
+if __name__ == '__main__':
+    # Usage
+    # B = Name , parents , B given A is true, B given A is false
+    nodes = [
+        Node('A', [], ((0.01, 0.99))),
+        Node('C', [], ((0.01, 0.99))),
+        #       (( P(B|A) , P(-B|A) )  , ( P(B|-A) , P(-B|-A) ))
+        Node('B', ['A', 'C'], ((0.8, 0.2), (0.1, 0.9)))
+    ]
 
-bayes = BayesianNetwork()
+    bayes = BayesianNetwork()
 
-bayes.add_nodes(nodes)
+    bayes.add_nodes(nodes)
 
-result = bayes.get_parents_results('B')
+    result = bayes.get_parents_results('B')
 
-for node in result:
-    node.watch_node_info()
+    for node in result:
+        node.watch_node_info()
